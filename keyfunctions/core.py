@@ -1,3 +1,7 @@
+from functools import reduce
+import keyfunctions.globals as consts
+
+
 def create_key(values, depth):
     """
     This function returns a Z-order key for any number of dimensions.
@@ -7,15 +11,15 @@ def create_key(values, depth):
      :return: a string of depth size
      """
     mul = 1 << depth
-    val_casted = [long(value*mul) for value in values]
+    val_casted = [int(value * mul) for value in values]
     key = ""
-    for i in xrange(0, depth):
+    for i in range(0, depth):
         mask = 1 << i
         last = reduce(
             lambda x, y: x | y,
             [((value & mask) >> i) << dimension for dimension, value in enumerate(val_casted)])
-        key = str(last) + key
-
+        # We want to use printable chars: from char '!' to '~' (we skipped space).
+        key = chr(last + consts.PRINTABLE_OFFSET) + key
     return key
 
 
@@ -32,13 +36,10 @@ def create_element_rand(element_id):
     if isinstance(element_id, int):
         obj = struct.pack('i', element_id)
     elif isinstance(element_id, long):
-        obj = struct.pack('q',element_id)
+        obj = struct.pack('q', element_id)
     elif isinstance(element_id, str):
         obj = element_id
     else:
         raise TypeError('Unknown type: pack it yourself with struct')
-
-
-
 
     return int(mmh3.hash(obj))
